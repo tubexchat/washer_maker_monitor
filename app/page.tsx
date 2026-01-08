@@ -13,10 +13,12 @@ import {
   Calendar,
   Search,
   AlertCircle,
-  Terminal
+  Terminal,
+  BarChart2
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import MarketData from '@/components/MarketData';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -99,6 +101,7 @@ export default function Dashboard() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [orderLoading, setOrderLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [activeSymbol, setActiveSymbol] = useState('BTCUSDT');
 
   // Poll Interval Ref
   const pollInterval = useRef<NodeJS.Timeout | null>(null);
@@ -411,9 +414,38 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Right Column: Real-time Monitor */}
-        <div className="col-span-12 lg:col-span-8 flex flex-col h-[calc(100vh-160px)]">
-          <div className="data-card flex-1 flex flex-col overflow-hidden">
+        {/* Right Column: Real-time Monitor & Market Data */}
+        <div className="col-span-12 lg:col-span-8 flex flex-col gap-8">
+
+          {/* Market Data Section */}
+          <div className="h-[450px]">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <BarChart2 className="w-5 h-5 text-blue-500" />
+                <h2 className="text-lg font-bold text-white uppercase tracking-tight">Public Market Data</h2>
+              </div>
+              <div className="flex gap-2">
+                {['BTCUSDT', 'ETHUSDT', 'SOLUSDT'].map(sym => (
+                  <button
+                    key={sym}
+                    onClick={() => setActiveSymbol(sym)}
+                    className={cn(
+                      "px-3 py-1 rounded text-xs font-mono transition-all",
+                      activeSymbol === sym
+                        ? "bg-blue-600 text-white"
+                        : "bg-zinc-900 text-gray-500 hover:text-gray-300 border border-white/5"
+                    )}
+                  >
+                    {sym}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <MarketData symbol={activeSymbol} />
+          </div>
+
+          {/* Open Orders Monitor */}
+          <div className="data-card flex flex-col overflow-hidden h-[500px]">
             <div className="px-6 py-4 border-b border-white/5 flex justify-between items-center bg-zinc-900/30">
               <div className="flex items-center gap-3">
                 <Terminal className="w-4 h-4 text-emerald-500" />
