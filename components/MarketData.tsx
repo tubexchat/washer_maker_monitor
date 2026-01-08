@@ -126,35 +126,40 @@ export default function MarketData({ symbol }: MarketDataProps) {
                 try {
                     const data = JSON.parse(event.data);
 
-                    if (data.channel === `orderbook:${symbol}`) {
-                        // WS Orderbook update usually is full snapshot or diff.
-                        // Assuming full snapshot based on "Tick" or similar structure, 
-                        // but if it's diff we might need complex logic.
-                        // For now assuming it sends a structure we can map.
-                        // If the WS sends data in same format as snapshot (bids/asks arrays):
-                        const rawData = data.data || {};
-                        const bids = (rawData.bids || []).map((b: any) => ({ price: b[0], amount: b[1] }));
-                        const asks = (rawData.asks || []).map((a: any) => ({ price: a[0], amount: a[1] }));
-                        // Only update if we got valid arrays, else it might be a different message
+                    // Backend sends: { type: "orderbook", symbol: "...", bids: [{price, size}], asks: [{price, size}], timestamp: ... }
+                    if (data.type === 'orderbook' && data.symbol === symbol) {
+                        const bids = (data.bids || []).map((b: any) => ({ price: b.price, amount: b.size }));
+                        const asks = (data.asks || []).map((a: any) => ({ price: a.price, amount: a.size }));
+
                         if (bids.length > 0 || asks.length > 0) {
-                            setOrderbook({ bids, asks, timestamp: rawData.timestamp });
+                            setOrderbook({ bids, asks, timestamp: data.timestamp });
                         }
-                    } else if (data.channel === `trades:${symbol}`) {
-                        // Data might be a single trade or array
-                        const newTrade = data.data;
-                        if (newTrade) {
-                            setTrades(prev => {
-                                // Safety check if prev is array
-                                const safePrev = Array.isArray(prev) ? prev : [];
-                                return [newTrade, ...safePrev].slice(0, 50);
-                            });
-                            // Also update ticker price if trade has price
-                            if (newTrade.price) {
-                                setTicker(prev => ({
-                                    ...prev!,
+                    }
+                    // Backend sends: { type: "trade", symbol: "...", price, amount, side, ... }
+                    else if (data.type === 'trade' && data.symbol === symbol) {
+                        const newTrade: Trade = {
+                            id: data.id,
+                            price: data.price,
+                            amount: data.amount,
+                            side: data.side as 'buy' | 'sell',
+                            timestamp: data.timestamp
+                        };
+
+                        setTrades(prev => {
+                            const safePrev = Array.isArray(prev) ? prev : [];
+                            // Avoid duplicates if needed, but for now simple prepend
+                            return [newTrade, ...safePrev].slice(0, 50);
+                        });
+
+                        // Update ticker price
+                        if (newTrade.price) {
+                            setTicker(prev => {
+                                if (!prev) return null;
+                                return {
+                                    ...prev,
                                     price: newTrade.price
-                                }));
-                            }
+                                };
+                            });
                         }
                     }
                 } catch (e) {
