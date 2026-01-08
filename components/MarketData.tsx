@@ -51,22 +51,51 @@ export default function MarketData({ symbol }: MarketDataProps) {
     // Initial Snapshot Fetch via Proxy
     const fetchSnapshots = async () => {
         try {
+            // Orderbook Parsing
             const obRes = await fetch(`/api/proxy/markets/${symbol}/orderbook`);
             if (obRes.ok) {
-                setOrderbook(await obRes.json());
+                const data = await obRes.json();
+                console.log(`[MarketData] ${symbol} Orderbook snapshot:`, data);
+                // Transform arrays [price, amt] to objects {price, amt}
+                if (data && data.bids && data.asks) {
+                    const bids = (data.bids || []).map((b: any) => ({ price: b[0], amount: b[1] }));
+                    const asks = (data.asks || []).map((a: any) => ({ price: a[0], amount: a[1] }));
+                    setOrderbook({ bids, asks, timestamp: data.timestamp });
+                } else {
+                    console.warn(`[MarketData] Invalid orderbook data format for ${symbol}`, data);
+                }
+            } else {
+                console.warn(`[MarketData] Orderbook fetch failed: ${obRes.status}`);
             }
 
+            // Trades Parsing
             const trRes = await fetch(`/api/proxy/markets/${symbol}/trades`);
             if (trRes.ok) {
-                setTrades(await trRes.json());
+                const data = await trRes.json();
+                console.log(`[MarketData] ${symbol} Trades snapshot:`, data);
+                const tradeList = Array.isArray(data.trades) ? data.trades : [];
+                setTrades(tradeList);
+            } else {
+                console.warn(`[MarketData] Trades fetch failed: ${trRes.status}`);
             }
 
+            // Ticker Parsing
             const tickerRes = await fetch(`/api/proxy/markets/${symbol}/ticker`);
             if (tickerRes.ok) {
-                setTicker(await tickerRes.json());
+                const data = await tickerRes.json();
+                console.log(`[MarketData] ${symbol} Ticker snapshot:`, data);
+                setTicker({
+                    price: data.last_price || data.price,
+                    change24h: data.price_change_percent_24h,
+                    high24h: data.high_24h,
+                    low24h: data.low_24h,
+                    volume24h: data.volume_24h
+                });
+            } else {
+                console.warn(`[MarketData] Ticker fetch failed: ${tickerRes.status}`);
             }
         } catch (err) {
-            console.error("Failed to fetch market snapshots", err);
+            console.error("[MarketData] Failed to fetch market snapshots", err);
         }
     };
 
@@ -75,7 +104,8 @@ export default function MarketData({ symbol }: MarketDataProps) {
 
         // Setup WebSocket
         const connectWs = () => {
-            const socket = new WebSocket('ws://api.renance.xyz/ws/');
+            // Use WSS (Secure WebSocket) to avoid mixed content errors and ensure connectivity
+            const socket = new WebSocket('wss://api.renance.xyz/ws');
             ws.current = socket;
 
             socket.onopen = () => {
@@ -97,16 +127,35 @@ export default function MarketData({ symbol }: MarketDataProps) {
                     const data = JSON.parse(event.data);
 
                     if (data.channel === `orderbook:${symbol}`) {
-                        setOrderbook(data.data);
+                        // WS Orderbook update usually is full snapshot or diff.
+                        // Assuming full snapshot based on "Tick" or similar structure, 
+                        // but if it's diff we might need complex logic.
+                        // For now assuming it sends a structure we can map.
+                        // If the WS sends data in same format as snapshot (bids/asks arrays):
+                        const rawData = data.data || {};
+                        const bids = (rawData.bids || []).map((b: any) => ({ price: b[0], amount: b[1] }));
+                        const asks = (rawData.asks || []).map((a: any) => ({ price: a[0], amount: a[1] }));
+                        // Only update if we got valid arrays, else it might be a different message
+                        if (bids.length > 0 || asks.length > 0) {
+                            setOrderbook({ bids, asks, timestamp: rawData.timestamp });
+                        }
                     } else if (data.channel === `trades:${symbol}`) {
                         // Data might be a single trade or array
                         const newTrade = data.data;
-                        setTrades(prev => [newTrade, ...prev].slice(0, 50));
-                        // Also update ticker price
-                        setTicker(prev => ({
-                            ...prev!,
-                            price: newTrade.price
-                        }));
+                        if (newTrade) {
+                            setTrades(prev => {
+                                // Safety check if prev is array
+                                const safePrev = Array.isArray(prev) ? prev : [];
+                                return [newTrade, ...safePrev].slice(0, 50);
+                            });
+                            // Also update ticker price if trade has price
+                            if (newTrade.price) {
+                                setTicker(prev => ({
+                                    ...prev!,
+                                    price: newTrade.price
+                                }));
+                            }
+                        }
                     }
                 } catch (e) {
                     console.error("WS Message Error", e);

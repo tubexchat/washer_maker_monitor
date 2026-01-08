@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export const runtime = 'edge';
+// Default Node.js runtime for stability
 
 const API_KEY = 'jLaOQFpw7GfWSUjccDdeprgPuVz6Cev8SmJu1IDLaek=';
 const API_BASE_URL = 'https://api.renance.xyz/api/v1/admin/stats/trade-volume';
+
+const NO_CACHE_HEADERS = {
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+};
 
 export async function GET(request: NextRequest) {
     try {
@@ -23,25 +29,27 @@ export async function GET(request: NextRequest) {
             headers: {
                 'X-API-Key': API_KEY
             },
-            // Add cache control
-            next: { revalidate: 0 } // Don't cache, always fetch fresh data
+            // Add cache control to fetch
+            next: { revalidate: 0 }
         });
 
         if (!response.ok) {
             return NextResponse.json(
                 { error: `API请求失败: ${response.status}` },
-                { status: response.status }
+                { status: response.status, headers: NO_CACHE_HEADERS }
             );
         }
 
         const data = await response.json();
 
-        return NextResponse.json(data);
+        return NextResponse.json(data, {
+            headers: NO_CACHE_HEADERS
+        });
     } catch (error) {
         console.error('API proxy error:', error);
         return NextResponse.json(
             { error: '服务器内部错误' },
-            { status: 500 }
+            { status: 500, headers: NO_CACHE_HEADERS }
         );
     }
 }

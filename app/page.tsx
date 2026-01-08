@@ -121,18 +121,40 @@ export default function Dashboard() {
 
   const fetchDailyStats = useCallback(async () => {
     setStatsLoading(true);
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      // Default to "Today"
-      const url = `/api/volume?start_date=${today}&end_date=${today}`;
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        setVolumeData(data);
+
+    const fetchWithRetry = async (retries = 3, delay = 500): Promise<any> => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        const url = `/api/volume?start_date=${today}&end_date=${today}`;
+
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.json();
+      } catch (err: any) {
+        clearTimeout(timeoutId);
+        if (retries > 0 && err.name !== 'AbortError') {
+          await new Promise(r => setTimeout(r, delay));
+          return fetchWithRetry(retries - 1, delay * 2);
+        }
+        throw err;
       }
-    } catch (e) {
-      console.error("Failed to fetch volume stats", e);
+    };
+
+    try {
+      const data = await fetchWithRetry();
+      if (data) setVolumeData(data);
+    } catch (e: any) {
+      if (e.name !== 'AbortError') {
+        console.warn("Usage stats unavailable:", e.message);
+      }
     } finally {
+      // Ensure we don't set loading false if the component is mounted is hard to track cleanly without a ref, 
+      // but usually fine in Next.js functional components unless unmounted.
       setStatsLoading(false);
     }
   }, []);
@@ -276,18 +298,18 @@ export default function Dashboard() {
 
   // --- Helper Formatters ---
 
-  const formatMoney = (val: number) => {
+  const formatMoney = (val: number | string | undefined) => {
+    const num = typeof val === 'string' ? parseFloat(val) : (val || 0);
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       maximumFractionDigits: 0
-    }).format(val);
+    }).format(num);
   };
 
   const formatDate = (ts: number | string) => {
     if (!ts) return '-';
-    // If number, assume ms? Python script says maybe seconds or ms. usually API is ms if recent, or sec.
-    // The script used `datetime.fromtimestamp(created_at / 1000)` implying ms.
+    // If number, assume ms
     const date = new Date(typeof ts === 'number' ? ts : ts);
     return date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
   };
@@ -356,7 +378,7 @@ export default function Dashboard() {
                 <div>
                   <div className="text-xs uppercase text-gray-500 mb-1">Total Volume (USD)</div>
                   <div className="text-3xl font-mono font-bold text-white tracking-tight">
-                    {formatMoney(volumeData?.summary?.total_volume_usd || 0)}
+                    {formatMoney(volumeData?.summary?.total_volume_usd)}
                   </div>
                 </div>
 
@@ -370,7 +392,7 @@ export default function Dashboard() {
                   <div className="bg-zinc-900/50 p-4 rounded-lg border border-white/5 hover:border-white/10 transition-colors">
                     <div className="text-xs text-gray-500 mb-1">Fees</div>
                     <div className="text-xl font-mono text-emerald-400">
-                      {formatMoney(volumeData?.summary?.total_fees || 0)}
+                      {formatMoney(volumeData?.summary?.total_fees)}
                     </div>
                   </div>
                 </div>
@@ -398,7 +420,7 @@ export default function Dashboard() {
                     <tr key={idx}>
                       <td className="font-medium text-white">{item.symbol}</td>
                       <td className="text-right font-mono text-gray-300">
-                        ${(item.volume_usd / 1000).toFixed(1)}k
+                        {formatMoney(item.volume_usd)}
                       </td>
                       <td className="text-right font-mono text-gray-300">{item.trade_count}</td>
                     </tr>
