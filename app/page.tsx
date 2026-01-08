@@ -153,7 +153,7 @@ export default function Dashboard() {
       </header>
 
       {/* Main Content (padded for fixed header) */}
-      <div className="pt-24 pb-12 px-6 lg:px-8 max-w-[1600px] mx-auto">
+      <div className="pt-32 pb-12 px-6 lg:px-8 max-w-[1600px] mx-auto">
 
         <div className="grid grid-cols-12 gap-6">
 
