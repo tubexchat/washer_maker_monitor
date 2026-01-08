@@ -121,39 +121,10 @@ export default function Dashboard() {
     <div className="min-h-screen bg-[#050505] text-sm font-sans selection:bg-blue-500/30">
 
       {/* Optimized Top Bar */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#050505]/80 backdrop-blur-md border-b border-white/5 h-16 flex items-center px-6 lg:px-8 justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-500/20">
-            R
-          </div>
-          <div className="flex flex-col">
-            <h1 className="text-sm font-bold tracking-tight text-white flex items-center gap-2">
-              WASHER MONITOR
-              <span className="px-1.5 py-0.5 rounded text-[10px] bg-white/5 text-gray-400 font-normal border border-white/5">v1.0</span>
-            </h1>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-6">
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/5 border border-emerald-500/20 text-emerald-500">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span className="text-[10px] font-semibold tracking-wide uppercase">System Online</span>
-          </div>
 
-          <div className="hidden md:block h-8 w-px bg-white/10"></div>
-
-          <div className="text-xs font-mono text-gray-500 flex items-center gap-2">
-            <Clock className="w-3 h-3" />
-            {currentTime}
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content (padded for fixed header) */}
-      <div className="pt-32 pb-12 px-6 lg:px-8 max-w-[1600px] mx-auto">
+      {/* Main Content (padded for fixed bottom bar) */}
+      <div className="pt-8 pb-24 px-6 lg:px-8 max-w-[1600px] mx-auto">
 
         <div className="grid grid-cols-12 gap-6">
 
@@ -282,6 +253,38 @@ export default function Dashboard() {
 
         </div>
       </div>
+
+      {/* Optimized Bottom Bar */}
+      <header className="fixed bottom-0 left-0 right-0 z-50 bg-[#050505]/80 backdrop-blur-md border-t border-white/5 h-16 flex items-center px-6 lg:px-8 justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-500/20">
+            R
+          </div>
+          <div className="flex flex-col">
+            <h1 className="text-sm font-bold tracking-tight text-white flex items-center gap-2">
+              WASHER MONITOR
+              <span className="px-1.5 py-0.5 rounded text-[10px] bg-white/5 text-gray-400 font-normal border border-white/5">v1.0</span>
+            </h1>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/5 border border-emerald-500/20 text-emerald-500">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-[10px] font-semibold tracking-wide uppercase">System Online</span>
+          </div>
+
+          <div className="hidden md:block h-8 w-px bg-white/10"></div>
+
+          <div className="text-xs font-mono text-gray-500 flex items-center gap-2">
+            <Clock className="w-3 h-3" />
+            {currentTime}
+          </div>
+        </div>
+      </header>
     </div>
   );
 }
