@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const runtime = 'edge';
+
 const TARGET_BASE_URL = 'https://api.renance.xyz/api/v1';
 
 export async function GET(

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const runtime = 'edge';
+
 const API_KEY = 'jLaOQFpw7GfWSUjccDdeprgPuVz6Cev8SmJu1IDLaek=';
 const API_BASE_URL = 'https://api.renance.xyz/api/v1/admin/stats/trade-volume';
 
