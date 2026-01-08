@@ -2,170 +2,120 @@
 @import "tailwindcss";
 
 :root {
-  --background: #09090b;
-  /* Zinc 950 */
-  --foreground: #e4e4e7;
-  /* Zinc 200 */
-  --surface: #121215;
-  /* Slightly lighter than bg */
-  --surface-hover: #18181b;
-  /* Zinc 900 */
-  --border: #27272a;
-  /* Zinc 800 */
+  /* Core Colors - Deep Space Theme */
+  --bg-app: #030406;
+  --bg-surface: #0b0d12;
+  --bg-card: #12141c;
+  
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-visible: rgba(255, 255, 255, 0.12);
+  --border-active: rgba(59, 130, 246, 0.4);
 
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
-
-  --secondary: #a1a1aa;
-  /* Zinc 400 */
-
-  --success: #10b981;
-  --warning: #f59e0b;
-  --error: #ef4444;
-
-  --buy: #10b981;
-  --sell: #ef4444;
+  /* Typography */
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  
+  /* Accents */
+  --color-primary: #3b82f6;
+  --color-primary-glow: rgba(59, 130, 246, 0.5);
+  
+  /* Trading Colors (Neon) */
+  --color-buy: #10b981;
+  --color-buy-dim: rgba(16, 185, 129, 0.1);
+  --color-sell: #ef4444;
+  --color-sell-dim: rgba(239, 68, 68, 0.1);
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@theme {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  --color-app-bg: var(--bg-app);
+  --color-app-surface: var(--bg-surface);
+  --color-app-card: var(--bg-card);
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: radial-gradient(circle at 50% 0%, #0f1629 0%, var(--bg-app) 40%), var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-weight: 600;
-  letter-spacing: -0.01em;
+/* --- Glassmorphism & Cards --- */
+.glass-panel {
+  background: rgba(18, 20, 28, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.5);
 }
 
-.font-mono {
-  font-family: 'JetBrains Mono', monospace;
+.glass-panel-hover {
+  transition: all 0.3s ease;
 }
 
-/* Data Card Style */
-.data-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+.glass-panel-hover:hover {
+  border-color: var(--border-visible);
+  background: rgba(18, 20, 28, 0.9);
+  box-shadow: 0 8px 30px -5px rgba(0, 0, 0, 0.6);
 }
 
-/* Table Styles - Cleaner & Better Aligned */
-.data-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  font-size: 0.85rem;
+/* --- Typography Utilities --- */
+.text-glow {
+  text-shadow: 0 0 20px var(--color-primary-glow);
 }
 
-.data-table th {
-  text-align: left;
-  padding: 0.875rem 1.25rem;
-  color: var(--secondary);
-  font-weight: 500;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  white-space: nowrap;
+/* --- Trading Specifics --- */
+.orderbook-row {
+  position: relative;
+  z-index: 1;
 }
 
-.data-table td {
-  padding: 0.875rem 1.25rem;
-  border-bottom: 1px solid var(--border);
-  color: var(--foreground);
-  transition: background-color 0.15s ease;
+.orderbook-bg-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  z-index: -1;
+  opacity: 0.15;
+  transition: width 0.2s ease;
 }
 
-.data-table tr:last-child td {
-  border-bottom: none;
-}
+.bg-buy { background-color: var(--color-buy); }
+.bg-sell { background-color: var(--color-sell); }
+.text-buy { color: var(--color-buy); }
+.text-sell { color: var(--color-sell); }
 
-.data-table tr:hover td {
-  background: var(--surface-hover);
-}
-
-/* Buttons */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-weight: 500;
-  font-size: 0.875rem;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.btn-primary {
-  background: var(--primary);
-  color: white;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-}
-
-.btn-primary:hover {
-  background: var(--primary-hover);
-  transform: translateY(-1px);
-}
-
-.btn-outline {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--foreground);
-}
-
-.btn-outline:hover {
-  background: var(--surface-hover);
-  border-color: var(--secondary);
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Scrollbar - Sleek */
+/* --- Scrollbar Customization --- */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
   background: transparent;
-  /* Cleaner than solid bg */
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3f3f46;
-  border-radius: 3px;
+  background: #334155;
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
+  background: #475569;
 }
 
-/* Utilities */
-.text-buy {
-  color: var(--buy);
+/* --- Animations --- */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
-.text-sell {
-  color: var(--sell);
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
